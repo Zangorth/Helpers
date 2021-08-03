@@ -12,8 +12,8 @@ class GA:
         
     def fit(self, i):
         max_features = self.max_features if self.max_features != None else self.x.shape[1]
-        rows = self.x.loc[self.pop['rows'] == 1].index
-        cols = self.pop['cols']
+        rows = self.x.loc[self.pop['rows'][i] == 1].index
+        cols = self.pop['cols'][i]
         
         fit_list = []
         
@@ -24,10 +24,9 @@ class GA:
             x = self.x.dropna()
             y = self.y.loc[x.index]
             
-            x = x[[x.columns[i] for i in range(x.shape[1]) if cols[i] == 1]]
+            x = x[[x.columns[j] for j in range(x.shape[1]) if cols[j] == 1]]      
             
-            
-            for fold in cv:
+            for fold in self.cv:
                 x_test = x.loc[x.index.isin(fold)]
                 
                 x_train = x.loc[~x.index.isin(fold)]
@@ -44,21 +43,10 @@ class GA:
         
         return np.mean(fit_list)
         
-    def parallel(self):
-        pool = Pool()
+    def parallel(self, workers=2):
+        pool = Pool(workers)
         out = pool.map(self.fit, range(10))
         pool.close()
         pool.join()
         
         return out
-
-
-ga = GA(x, y, pop, cv)
-
-if __name__ == '__main__':
-    print(ga.parallel())
-    
-    
-
-pop = {'rows': np.random.binomial(1, 0.95, len(x)), 'cols': np.random.binomial(1, 0.95, x.shape[1])}
-cv = [x.loc[semi == 'semi'].groupby(y, group_keys=False).apply(lambda x: x.sample(min(len(x), 25))).sort_index().index for i in range(5)]
