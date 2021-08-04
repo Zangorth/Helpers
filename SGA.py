@@ -1,17 +1,51 @@
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.exceptions import ConvergenceWarning
-from matplotlib import pyplot as plt
 from sklearn.metrics import f1_score
 from multiprocessing import Pool
-import seaborn as sea
 import pandas as pd
 import numpy as np
 import warnings
 
 warnings.filterwarnings('error', category=ConvergenceWarning)
 
-sea.set_style('whitegrid')
+##################
+# Model Function #
+##################
+def model_fit(x_train, y_train, x_test, y_test, model, pop, i):
+    if model == 'logit':
+        solver = 'lbfgs' if 'solver' not in pop else pop['solver'][i]
+        penalty = 'l2' if 'penalty' not in pop else pop['penalty'][i]
+        
+        model = LogisticRegression(penalty=penalty, solver=solver)
+        
+        try:
+            model.fit(x_train, y_train)
+            predictions = model.predict(x_test)
+            return f1_score(y_test, predictions, average='micro')
+        
+        except ConvergenceWarning:
+            return 0
+    
+    elif model == 'rfc':
+        n_samples = 1000 if 'n_samples' not in pop else pop['n_samples'][i]
+        max_depth = None if 'max_depth_rfc' not in pop else pop['max_depth_rfc'][i]
+        
+        model = RandomForestClassifier(n_samples=n_samples, max_depth=max_depth)
+        model.fit(x_train, y_train)
+        predictions = model.predict(x_test)
+        return f1_score(y_test, predictions, average='micro')
+    
+    elif model == 'gbc':
+        learning_rate = 0.1 if 'learning_rate' not in pop else pop['learning_rate'][i]
+        n_estimators = 100 if 'n_estimators' not in pop else pop['n_estimators'][i]
+        max_depth = 3 if 'max_depth_gbc' not in pop else pop['max_depth_gbc'][i]
+        
+        model = GradientBoostingClassifier(n_estimators=n_estimators, learning_rate=learning_rate, max_depth=max_depth)
+        model.fit(x_train, y_train)
+        predictions = model.predict(x_test)
+        return f1_score(y_test, predictions, average='micro')
+
 
 class GA:
     def __init__(self, x, y, pop, cv=[], model='logit', max_features=None):
@@ -20,7 +54,6 @@ class GA:
         self.max_features = max_features
         self.model = model
         self.max = []
-        
 
     ####################
     # Fitness Function #
@@ -50,25 +83,7 @@ class GA:
                 y_test = y.loc[x_test.index]
                 y_train = y.loc[x_train.index]
                 
-                if self.model == 'logit':
-                    if 'solver' not in self.pop:
-                        solver = 'lbfgs'
-                    else:
-                        solver = self.pop['solver'][i]
-                    
-                    if 'penalty' not in self.pop:
-                        penalty = 'l2'
-                    else:
-                        penalty = self.pop['penalty'][i]
-                    
-                    model = LogisticRegression(penalty=penalty, solver=solver)
-                    
-                    try:
-                        model.fit(x_train, y_train)
-                        predictions = model.predict(x_test)
-                        fit_list.append(f1_score(y_test, predictions, average='micro'))
-                    except ConvergenceWarning:
-                        fit_list.append(0)
+                fit_list.append(model_fit(x_train, y_train, x_test, y_test, self.model, self.pop, i))
         
         return np.mean(fit_list)
     
@@ -128,9 +143,7 @@ class GA:
         
         return out
     
-    ##################
-    # Model Function #
-    ##################
+    
         
     
     
