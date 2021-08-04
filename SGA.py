@@ -1,12 +1,17 @@
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.exceptions import ConvergenceWarning
+from matplotlib import pyplot as plt
 from sklearn.metrics import f1_score
 from multiprocessing import Pool
+import seaborn as sea
 import pandas as pd
 import numpy as np
 import warnings
 
 warnings.filterwarnings('error', category=ConvergenceWarning)
+
+sea.set_style('whitegrid')
 
 class GA:
     def __init__(self, x, y, pop, cv=[], model='logit', max_features=None):
@@ -16,7 +21,10 @@ class GA:
         self.model = model
         self.max = []
         
-        
+
+    ####################
+    # Fitness Function #
+    ####################
     def fit(self, i=0):
         max_features = self.max_features if self.max_features != None else self.x.shape[1]
         rows = self.x.loc[self.pop['rows'][i] == 1].index
@@ -53,7 +61,7 @@ class GA:
                     else:
                         penalty = self.pop['penalty'][i]
                     
-                    model = LogisticRegression(max_iter=500, penalty=penalty, solver=solver)
+                    model = LogisticRegression(penalty=penalty, solver=solver)
                     
                     try:
                         model.fit(x_train, y_train)
@@ -64,10 +72,15 @@ class GA:
         
         return np.mean(fit_list)
     
+    ###################
+    # Mating Function #
+    ###################
     def mate(self, fitness, num_parents):
-        self.max.append(np.max(fitness))
         return self.pop.loc[self.pop.index.isin(((-np.array(fitness)).argsort())[0:num_parents])]
     
+    #####################
+    # Children Function #
+    #####################
     def children(self, fitness, num_children, mutation_rate):
         children = pd.DataFrame(columns=self.pop.columns, index=range(num_children))
         
@@ -87,7 +100,7 @@ class GA:
                     
                 elif type(mom[col]) == str:
                     mutate = bool(np.random.binomial(1, mutation_rate))
-                    children.iloc[i, j] = np.random.choice(list(set(self.pop[col]))) if mutate else np.random.choice([mom[col], dad[col]])
+                    children.iloc[i, j] = str(np.random.choice(list(set(self.pop[col]))) if mutate else np.random.choice([mom[col], dad[col]]))
                 
                 elif type(mom[col]) == np.ndarray:
                     mutate = np.random.binomial(1, mutation_rate, len(mom[col]))
@@ -97,11 +110,16 @@ class GA:
                 
                 else:
                     print('Invalid Data Type')
+                    print(f'{mom[col]} needs to be data type int, float, str, or ndarray')
+                    print(f'{mom[col]} is currently data type {type(mom[col])}')
+                    print('')
                     break
                     
         return children
         
-        
+    #######################
+    # Parallelize Fitness #
+    #######################
     def parallel(self, solutions, workers=2):
         pool = Pool(workers)
         out = pool.map(self.fit, range(solutions))
@@ -110,5 +128,9 @@ class GA:
         
         return out
     
-    def plot(self):
-        return self.max
+    ##################
+    # Model Function #
+    ##################
+        
+    
+    
