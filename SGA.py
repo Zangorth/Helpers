@@ -25,7 +25,7 @@ class GA:
         fit_list = []
         
         if sum(cols) > max_features:
-            fit_list.append(-666)
+            fit_list.append(0)
         
         else:
             x = self.x.dropna()
@@ -60,7 +60,7 @@ class GA:
                         predictions = model.predict(x_test)
                         fit_list.append(f1_score(y_test, predictions, average='micro'))
                     except ConvergenceWarning:
-                        fit_list.append(-777)
+                        fit_list.append(0)
         
         return np.mean(fit_list)
     
@@ -76,22 +76,23 @@ class GA:
             mom, dad = self.pop.iloc[mates[0]], self.pop.iloc[mates[1]]
             
             for j in range(len(self.pop.columns)):
-                if type(mom[self.pop.columns[j]]) == int:
+                col = self.pop.columns[j]
+                if type(mom[col]) == int:
                     mutate = bool(np.random.binomial(1, mutation_rate))
-                    children.iloc[i, j] = round(np.mean([mom, dad])) if mutate else np.random.choice(mom, dad)
+                    children.iloc[i, j] = round(np.mean([mom[col], dad[col]])) if mutate else np.random.choice([mom[col], dad[col]])
                     
-                elif type(mom[self.pop.columns[j]]) == float:
+                elif type(mom[col]) == float:
                     mutate = bool(np.random.binomial(1, mutation_rate))
-                    children.iloc[i, j] = np.mean([mom, dad]) if mutate else np.random.choice(mom, dad)
+                    children.iloc[i, j] = np.mean([mom[col], dad[col]]) if mutate else np.random.choice([mom[col], dad[col]])
                     
-                elif type(mom[self.pop.columns[j]]) == str:
+                elif type(mom[col]) == str:
                     mutate = bool(np.random.binomial(1, mutation_rate))
-                    children.iloc[i, j] = np.random.choice(set(self.pop[self.pop.columns[j]])) if mutate else np.random.choice(mom, dad)
+                    children.iloc[i, j] = np.random.choice(list(set(self.pop[col]))) if mutate else np.random.choice([mom[col], dad[col]])
                 
-                elif type(mom[self.pop.columns[j]]) == np.ndarray:
-                    mutate = np.random.binomial(1, mutation_rate, len(mom[self.pop.columns[j]]))
-                    choice = np.random.binomial(1, 0.5, len(mom[self.pop.columns[j]]))
-                    child = [mom[self.pop.columns[j]][i] if choice[i] == 1 else dad[self.pop.columns[j]][i] for i in range(len(choice))]
+                elif type(mom[col]) == np.ndarray:
+                    mutate = np.random.binomial(1, mutation_rate, len(mom[col]))
+                    choice = np.random.binomial(1, 0.5, len(mom[col]))
+                    child = [mom[col][i] if choice[i] == 1 else dad[col][i] for i in range(len(choice))]
                     children.iloc[i, j] = np.array([1 - child[i] if mutate[i] == 1 else child[i] for i in range(len(mutate))])
                 
                 else:
@@ -108,3 +109,6 @@ class GA:
         pool.join()
         
         return out
+    
+    def plot(self):
+        return self.max
