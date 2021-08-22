@@ -1,12 +1,14 @@
 from sklearn.model_selection import train_test_split as split
 from imblearn.over_sampling import SMOTE
 from multiprocessing import Pool
+from scipy.stats import sem
 import numpy as np
 
 
 class CV():
-    def __init__(self, model, metric):
+    def __init__(self, model, metric, lower_bound=False):
         self.model, self.metric = model, metric
+        self.lower_bound = lower_bound
         
         return None
     
@@ -32,6 +34,9 @@ class CV():
         if self.full:
             return metric_list
         
+        elif self.lower_bound:
+            return np.mean(metric_list) - 1.96*sem(metric_list)
+        
         else:
             return np.mean(metric_list)
         
@@ -43,6 +48,9 @@ class CV():
             
         if self.full:
             return metric_list
+        
+        elif self.lower_bound:
+            return np.mean(metric_list) - 1.96*sem(metric_list)
         
         else:
             return np.mean(metric_list)
