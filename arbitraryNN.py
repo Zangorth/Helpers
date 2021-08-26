@@ -5,11 +5,12 @@ import torch
 
 class Discriminator():
     def __init__(self, drop=0.1, neurons=[64, 32, 16], lr_nn=0.0001, 
-                 epochs=20, output=2, layers=3, device='cuda:0'):
-        self.drop, self.output, self.layers = drop, output, layers
+                 epochs=20, layers=3, device='cuda:0', batch_size=2**7):
+        self.drop, self.layers = drop, layers
         self.neurons = neurons
         self.lr_nn, self.epochs = lr_nn, epochs
         self.device = torch.device(device)
+        self.batch_size = batch_size
         
         return None
         
@@ -33,18 +34,20 @@ class Discriminator():
             self.model = nn.Sequential(sequential)
             
         def forward(self, x):
-            output = self.model(x)
-            return output
+            out = self.model(x)
+            return out
     
     def fit(self, x, y):
         col_count = x.shape[1]
+        output = len(set(y))
+        
         x, y = torch.from_numpy(x.values).to(self.device), torch.from_numpy(y.values).to(self.device)
         
         train_set = [(x[i].to(self.device), y[i].to(self.device)) for i in range(len(y))]
-        train_loader = torch.utils.data.DataLoader(train_set, batch_size=2**10, shuffle=True)
+        train_loader = torch.utils.data.DataLoader(train_set, batch_size=self.batch_size, shuffle=True)
     
         loss_function = nn.CrossEntropyLoss()
-        discriminator = self.Classifier(col_count, self.neurons, self.drop, self.output, self.layers).to(self.device)
+        discriminator = self.Classifier(col_count, self.neurons, self.drop, output, self.layers).to(self.device)
         optim = torch.optim.Adam(discriminator.parameters(), lr=self.lr_nn)
     
         for epoch in range(self.epochs):
