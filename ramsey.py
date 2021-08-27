@@ -195,23 +195,17 @@ def data_collect(video_link, username, password, audio_location, transcript_loca
             st.dataframe(metadata, width=5000)
         
         iterables = new.iterables()
-        
-        if parallel:
-            with st.spinner('Encoding Audio'):
-                with Pool(10) as pool:
-                    audio_coding = pool.map(new.encode_audio, iterables)
                 
-        else:
-            iteration = st.empty()
-            i, pb = 0, st.progress(0)
-            audio_coding = []
-            for sound in iterables:
-                audio_coding.append(new.encode_audio(sound))
-                
-                iteration.text(f'Encoding Audio - Seconds Processed: {i+1}/{len(iterables)}')
-                pb.progress((i+1)/len(iterables))
-                
-                i += 1
+        iteration = st.empty()
+        i, pb = 0, st.progress(0)
+        audio_coding = []
+        for sound in iterables:
+            audio_coding.append(new.encode_audio(sound))
+            
+            iteration.text(f'Encoding Audio - Seconds Processed: {i+1}/{len(iterables)}')
+            pb.progress((i+1)/len(iterables))
+            
+            i += 1
                 
             iteration.empty()
             pb.empty()
