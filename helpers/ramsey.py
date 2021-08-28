@@ -46,6 +46,7 @@ class Scrape():
         con = sql.connect(connection_string)
         query = 'SELECT * FROM [ramsey].[metadata]'
         collected = pd.read_sql(query, con)
+        self.columns = pd.read_sql('SELECT TOP 1 * FROM [ramsey].[audio]', con).columns
         con.close()
         
         self.yt = YouTube(self.link)
