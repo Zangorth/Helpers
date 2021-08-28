@@ -196,9 +196,9 @@ def data_collect(video_link, username, password, audio_location, transcript_loca
             
             i += 1
                 
-            iteration.empty()
-            pb.empty()
-        
+        iteration.empty()
+        pb.empty()
+    
         audio_coding = pd.concat(audio_coding)
         
         if 'guest' in username and verbose:
