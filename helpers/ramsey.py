@@ -106,7 +106,7 @@ class Scrape():
     
     def iterables(self):
         sound = AudioSegment.from_file(self.file)
-        iterables = [[cut, int(round(len(sound)/1000), 0), sound[cut*1000:cut*1000+1000]] for cut in range(int(round(len(sound)/1000, 0)))]
+        iterables = [[cut, int(round(len(sound)/1000, 0))-1, sound[cut*1000:cut*1000+1000]] for cut in range(int(round(len(sound)/1000, 0)))]
         
         return iterables
     
