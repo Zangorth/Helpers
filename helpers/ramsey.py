@@ -239,10 +239,10 @@ def data_collect(video_link, username, password, audio_location, transcript_loca
         elif username == 'zangorth':
             with st.spinner('Uploading Metadata'):
                 metadata['seconds'] = audio_coding['second'].max()
-                upload(metadata, 'metadata', username, password)
+                upload(metadata, 'ramsey', 'metadata', username, password)
             
             with st.spinner('Uploading Audio Data'):
-                upload(audio_coding, 'audio', username, password)
+                upload(audio_coding, 'ramsey', 'audio', username, password)
         
         if verbose:
             st.write('')
