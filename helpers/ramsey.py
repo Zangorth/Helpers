@@ -148,7 +148,7 @@ class Scrape():
 ###############
 # Upload Data #
 ###############
-def upload(dataframe, name, username, password):
+def upload(dataframe, name, username, password, exists='append'):
     if 'guest' not in username:
         conn_str = (
                 r'Driver={ODBC Driver 17 for SQL Server};'
@@ -159,8 +159,36 @@ def upload(dataframe, name, username, password):
             )
         azure = urllib.parse.quote_plus(conn_str)
         engine = create_engine(f'mssql+pyodbc:///?odbc_connect={azure}')
-        dataframe.to_sql(name=name, con=engine, schema='ramsey', if_exists='append', index=False)
+        dataframe.to_sql(name=name, con=engine, schema='ramsey', if_exists=exists, index=False)
     
+    return None
+
+
+##############
+# Index Data #
+##############
+
+def reindex(schema, table, index, username, password):
+    if 'guest' not in username:
+        conn_str = (
+                r'Driver={ODBC Driver 17 for SQL Server};'
+                r'Server=zangorth.database.windows.net;'
+                r'Database=HomeBase;'
+                f'UID={username};'
+                f'PWD={password};'
+            )
+        azure = urllib.parse.quote_plus(conn_str)
+        csr = azure.cursor()
+        
+        query = f'''
+        CREATE CLUSTERED INDEX IX_{table}
+        ON {schema}.{table}({', '.join(index)})
+        '''
+        
+        csr.execute(query)
+        csr.commit()
+        azure.close()
+        
     return None
 
 ###########################
