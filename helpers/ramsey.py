@@ -106,7 +106,7 @@ class Scrape():
     
     def iterables(self):
         sound = AudioSegment.from_file(self.file)
-        iterables = [[cut, int(round(len(sound)/1000, 0))-1, sound[cut*1000:cut*1000+1000]] for cut in range(int(round(len(sound)/1000, 0)))]
+        iterables = [[cut, sound[cut*1000:cut*1000+1000]] for cut in range(int(round(len(sound)/1000, 0)))]
         
         return iterables
     
@@ -114,8 +114,7 @@ class Scrape():
         warnings.filterwarnings('ignore')
         
         second = sound[0]
-        seconds = sound[1]
-        sound = sound[2]
+        sound = sound[1]
         
         try:
             y, rate = librosa.load(sound.export(format='wav'), res_type='kaiser_fast')
@@ -128,7 +127,7 @@ class Scrape():
             
             features = list(mfccs) + list(chroma) + list(mel) + list(contrast) + list(tonnetz)
             features = [float(f) for f in features]
-            features = [self.personality, self.i, second, seconds] + features
+            features = [self.personality, self.i, second] + features
             
             features = pd.DataFrame([features], columns=self.columns)
             
@@ -207,6 +206,7 @@ def data_collect(video_link, username, password, audio_location, transcript_loca
         
         elif username == 'zangorth':
             with st.spinner('Uploading Metadata'):
+                metadata['seconds'] = audio_coding['second'].max()
                 upload(metadata, 'metadata', username, password)
             
             with st.spinner('Uploading Audio Data'):
