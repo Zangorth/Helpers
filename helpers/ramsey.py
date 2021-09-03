@@ -182,6 +182,8 @@ def reindex(schema, table, index, username, password, alter = {'channel': 'VARCH
             ALTER COLUMN {key} {alter[key]}
             '''
         
+        csr.commit()
+        
         query = f'''
         CREATE CLUSTERED INDEX IX_{table}
         ON {schema}.{table}({', '.join(index)})
