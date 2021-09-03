@@ -148,7 +148,7 @@ class Scrape():
 ###############
 # Upload Data #
 ###############
-def upload(dataframe, name, username, password, exists='append'):
+def upload(dataframe, schema, table, username, password, exists='append'):
     if 'guest' not in username:
         conn_str = (
                 r'Driver={ODBC Driver 17 for SQL Server};'
@@ -159,7 +159,7 @@ def upload(dataframe, name, username, password, exists='append'):
             )
         azure = urllib.parse.quote_plus(conn_str)
         engine = create_engine(f'mssql+pyodbc:///?odbc_connect={azure}')
-        dataframe.to_sql(name=name, con=engine, schema='ramsey', if_exists=exists, index=False)
+        dataframe.to_sql(name=table, con=engine, schema=schema, if_exists=exists, index=False)
     
     return None
 
@@ -170,14 +170,10 @@ def upload(dataframe, name, username, password, exists='append'):
 
 def reindex(schema, table, index, username, password):
     if 'guest' not in username:
-        conn_str = (
-                r'Driver={ODBC Driver 17 for SQL Server};'
-                r'Server=zangorth.database.windows.net;'
-                r'Database=HomeBase;'
-                f'UID={username};'
-                f'PWD={password};'
-            )
-        azure = urllib.parse.quote_plus(conn_str)
+        connection_string = ('DRIVER={ODBC Driver 17 for SQL Server};' + 
+                              'Server=zangorth.database.windows.net;DATABASE=HomeBase;' +
+                              f'UID={username};PWD={password}')
+        azure = sql.connect(connection_string)
         csr = azure.cursor()
         
         query = f'''
