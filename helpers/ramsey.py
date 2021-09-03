@@ -168,13 +168,19 @@ def upload(dataframe, schema, table, username, password, exists='append'):
 # Index Data #
 ##############
 
-def reindex(schema, table, index, username, password):
+def reindex(schema, table, index, username, password, alter = {'channel': 'VARCHAR(10)'}):
     if 'guest' not in username:
         connection_string = ('DRIVER={ODBC Driver 17 for SQL Server};' + 
                               'Server=zangorth.database.windows.net;DATABASE=HomeBase;' +
                               f'UID={username};PWD={password}')
         azure = sql.connect(connection_string)
         csr = azure.cursor()
+        
+        for key in alter:
+            query = f'''
+            ALTER TABLE {schema}.{table}
+            ALTER COLUMN {key} {alter[key]}
+            '''
         
         query = f'''
         CREATE CLUSTERED INDEX IX_{table}
