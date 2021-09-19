@@ -1,4 +1,3 @@
-from sklearn.model_selection import train_test_split as split
 from imblearn.over_sampling import SMOTE
 from multiprocessing import Pool
 from scipy.stats import sem
@@ -6,16 +5,17 @@ import numpy as np
 
 
 class CV():
-    def __init__(self, model, metric, lower_bound=False):
+    def __init__(self, model, metric, splitter, lower_bound=False):
         self.model, self.metric = model, metric
         self.lower_bound = lower_bound
+        self.splitter = splitter
         
         return None
     
     def cv_unitary(self, iterator):
         metric_list = []
         for i in range(self.cv):
-            x_train, x_test, y_train, y_test = split(self.x, self.y, test_size=self.frac, stratify=self.y)
+            x_train, x_test, y_train, y_test = self.splitter(self.x, self.y)
             
             if self.over and self.workers == 1:
                 oversample = SMOTE(n_jobs=-1)
@@ -56,9 +56,8 @@ class CV():
             return np.mean(metric_list)
         
     
-    def cv(self, x, y, cv=20, frac=0.1, over=True, full=False, workers=1):
+    def cv(self, x, y, cv=20, over=True, full=False, workers=1):
         self.x, self.y = x, y
-        self.frac = frac
         self.over, self.full = over, full
         self.workers=workers
         
@@ -75,6 +74,6 @@ class CV():
         else:
             return 'Number of Workers must be >= 1'
             
-        del [self.x, self.y, self.cv, self.frac, self.over, self.full, self.workers]
+        del [self.x, self.y, self.cv, self.over, self.full, self.workers]
             
         return out
